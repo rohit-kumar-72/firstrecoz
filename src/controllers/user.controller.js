@@ -96,32 +96,31 @@ export const updateUser = async (req, res) => {
 
         const { email, fullname, password, isAdmin } = req.body;
 
-        let updateField = {}
         if (!email) {
             throw new Error("email is required to identify user")
         }
 
-        if (fullname.trim()) {
-            updateField.fullname = fullname;
-        }
-        if (password.trim()) {
-            updateField.password = password;
-        }
-        if (isAdmin) {
-            updateField.isAdmin = isAdmin;
-        }
-
-        const updatedUser = await User.findOneAndUpdate(
+        const user = await User.findOne(
             {
                 email
-            },
-            updateField,
-            {
-                new: true
             }
-        ).select("-password")
+        );
 
-        if (!updatedUser) {
+        if (fullname.trim()) {
+            user.fullname = fullname;
+        }
+        if (password.trim()) {
+            user.password = password;
+        }
+        if (isAdmin) {
+            user.isAdmin = isAdmin;
+        }
+
+        await user.save();
+
+        user.password = null;
+
+        if (!user) {
             throw new Error("server error while updating user")
         }
 
@@ -130,7 +129,7 @@ export const updateUser = async (req, res) => {
             .json({
                 status: 200,
                 message: "user updated successfully",
-                data: updatedUser
+                data: user
             })
 
     } catch (error) {
